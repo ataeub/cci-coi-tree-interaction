@@ -1,0 +1,795 @@
+---
+title: "Hugging trees - Models"
+author: "Alexander Täuber"
+format:
+  html:
+    css: styles.css
+    self-contained: true
+    toc: true
+    number-sections: true
+fig-width: 7
+fig-height: 7
+project:
+    execute-dir: project
+execute:
+  warning: false
+  message: false
+---
+
+# Required libraries, options and paths
+```{r}
+#| output: false
+
+# Data manipulation
+library(dplyr)
+library(fs)
+library(readr)
+library(forcats)
+library(here)
+library(flextable)
+
+# Stats
+library(mgcv)
+library(glmmTMB)
+library(lmerTest)
+library(MuMIn)
+library(performance)
+library(gratia)
+
+# Plotting
+library(sjPlot)
+library(ggplot2)
+library(patchwork)
+
+# Scale helper function
+source("src/scale_descale.R")
+
+
+options(readr.show_col_types = FALSE)
+
+data_path <- here("data/results/tsp_data.csv")
+figure_path <- here("data/results/figures")
+```
+
+# Data read-in
+
+```{r}
+#| output: false
+
+full_data <- read_csv(data_path) %>%
+  # We filter out those TSPs that have no interacting crown elements at all
+  dplyr::filter(coi > 0) %>%
+  # Flag TSPs with large size differences
+  mutate(
+      tsp_scd = abs(sc_tree1 - sc_tree2),
+      tsp_size_diff = abs(size_tree1 - size_tree2),
+      tsp_height_diff = abs(height_tree1 - height_tree2),
+      unequal_size_tsp = ifelse(tsp_size_diff < quantile(tsp_size_diff, 0.75), FALSE, TRUE),
+      unequal_height_tsp = ifelse(tsp_height_diff < quantile(tsp_height_diff, 0.90), FALSE, TRUE)
+  ) %>%
+  # Scale and convert to factors where applicable
+  mutate(
+        tsp_ltd_s = as.numeric(scale(tsp_ltd)),
+        cci_s = as.numeric(scale(cci)),
+        coi_s = as.numeric(scale(coi)),
+        tsp_scd = abs(sc_tree1 - sc_tree2),
+        tsp_scd_s = as.numeric(scale(tsp_scd)),
+        ln_sr_s = as.numeric(scale(ln_sr)),
+        ln_n_s = as.numeric(scale(ln_n)),
+        ln_comp = as.factor(ln_comp),
+        tsp_div = as.factor(tsp_div) %>%
+            relevel(ref = "mono"),
+        tsp_habits = as.factor(tsp_habits) %>%
+            relevel(ref = "mixed habit"),
+        tsp_comp = {
+            tsp_comp %>%
+            as.factor() %>%
+            forcats::fct_anon()
+        },
+        ln_comp = {
+            ln_comp %>%
+            as.factor() %>%
+            forcats::fct_anon()
+        }
+    )
+
+# Create variables for de-scaling
+scale_data <- tibble(
+    var = c("tsp_ltd", "tsp_scd", "cci", "coi")
+) %>%
+    mutate(center = attr(scale(full_data[var]), "scaled:center")) %>%
+    mutate(scale = attr(scale(full_data[var]), "scaled:scale"))
+
+center_ltd <- scale_data$center[scale_data$var == "tsp_ltd"]
+center_scd <- scale_data$center[scale_data$var == "tsp_scd"]
+center_ln_sr <- scale_data$center[scale_data$var == "ln_sr"]
+center_ln_n <- scale_data$center[scale_data$var == "ln_n"]
+center_coi <- scale_data$center[scale_data$var == "coi"]
+scale_ltd <- scale_data$scale[scale_data$var == "tsp_ltd"]
+scale_scd <- scale_data$scale[scale_data$var == "tsp_scd"]
+scale_ln_sr <- scale_data$scale[scale_data$var == "ln_sr"]
+scale_ln_n <- scale_data$scale[scale_data$var == "ln_n"]
+scale_coi <- scale_data$scale[scale_data$var == "coi"]
+
+ltd_limits <- scale_by(c(0, 220), center_ltd, scale_ltd)
+ltd_breaks <- scale_by(seq(0, 200, 20), center_ltd, scale_ltd)
+scd_limits <- scale_by(c(0, 1.45), center_scd, scale_scd)
+scd_breaks <- scale_by(seq(0, 1.4, 0.2), center_scd, scale_scd)
+coi_limits <- c(0, 0.5)
+coi_breaks <- seq(0, 1, 0.1)
+```
+
+# Main
+## Figure 2
+### Model
+```{r}
+glmm_coi_cci <- glmmTMB::glmmTMB(coi ~ cci +
+                                 (1|tsp_comp),
+                         family = glmmTMB::beta_family(),
+                         data = full_data,
+                         REML = TRUE)
+```
+
+```{r}
+#| echo: false
+#| output: false
+
+figure_s1 <- performance::check_model(glmm_coi_cci)
+figure_2 <- sjPlot::plot_model(
+  glmm_coi_cci,
+  type = "pred",
+  terms = "cci",
+  show.data = TRUE,
+  dot.size = 4,
+  line.size = 1.5,
+  title = "",
+  axis.title = c("Crown complementarity index (CCI)", "Crown overlap index (COI)")
+) +
+  scale_x_continuous(
+    breaks = seq(0, 1, 0.2),
+    labels = seq(0, 1, 0.2),
+    limits = c(0, 1)
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2),
+    labels = seq(0, 1, 0.2),
+    limits = c(0, 1)
+  ) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    axis.line = element_line(linetype = "blank"),
+    plot.title = element_text(size = 40, face = "bold"),
+    panel.border = element_rect(linewidth = 1)
+  )
+plotly::ggplotly(figure_2)
+
+ggsave(
+  file = path(figure_path, "figure_s1.svg"),
+  plot = plot(figure_s1)
+)
+ggsave(
+  file = path(figure_path, "figure_2.png"),
+  plot = figure_2,
+  width = 7,
+  height = 7
+)
+table_1 <- tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1.doc"))
+tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1.doc"))
+```
+
+### Figure
+```{r}
+#| fig-width: 7
+#| fig-height: 7
+
+figure_2
+table_1
+```
+
+## Figure 3
+### Models
+#### Crown complementarity index (CCI)
+```{r}
+
+glmm_cci <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s +
+                                   tsp_scd_s +
+                                   ln_sr_s +
+                                   ln_n_s +
+                                   (1|tsp_comp),
+                         family = glmmTMB::beta_family(link = "logit"),
+                         data = full_data,
+                         REML = TRUE)
+
+summary(glmm_cci)
+
+glmm_cci_1 <- update(glmm_cci, ~ . - ln_sr_s)
+MuMIn::AICc(glmm_cci, glmm_cci_1)
+summary(glmm_cci_1)
+
+glmm_cci_2 <- update(glmm_cci_1, ~ . - ln_n_s)
+MuMIn::AICc(glmm_cci_1, glmm_cci_2)
+summary(glmm_cci_2)
+
+glmm_cci_3 <- update(glmm_cci_2, ~ . - I(tsp_ltd_s^2))
+MuMIn::AICc(glmm_cci_2, glmm_cci_3)
+summary(glmm_cci_3)
+
+summary(glmm_cci_3)
+confint(glmm_cci_3, parm="beta_", method="Wald")
+performance::r2(glmm_cci_3)
+```
+
+#### Crown overlap index (COI)
+```{r}
+
+glmm_coi <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s +
+                                   I(tsp_ltd_s^2) +
+                                   tsp_scd_s +
+                                   ln_sr_s +
+                                   ln_n_s +
+                                   (1|tsp_comp),
+                         family = glmmTMB::beta_family(),
+                         data = full_data,
+                         REML = TRUE)
+summary(glmm_coi)
+
+glmm_coi_1 <- update(glmm_coi, ~ . - I(tsp_ltd_s^2))
+MuMIn::AICc(glmm_coi, glmm_coi_1)
+summary(glmm_coi_1)
+
+glmm_coi_2 <- update(glmm_coi_1, ~ . - ln_sr_s)
+MuMIn::AICc(glmm_coi_1, glmm_coi_2)
+summary(glmm_coi_2)
+
+glmm_coi_3 <- update(glmm_coi_2, ~ . - ln_n_s)
+MuMIn::AICc(glmm_coi_2, glmm_coi_3)
+summary(glmm_coi_3)
+
+summary(glmm_coi_3)
+confint(glmm_coi_3, parm="beta_", method="Wald")
+performance::r2(glmm_coi_3)
+```
+
+```{r}
+#| echo: false
+#| output: false
+
+figure_s2 <- performance::check_model(glmm_cci_3)
+figure_s3 <- performance::check_model(glmm_coi_3)
+
+axis_text_size <- 20
+
+cci_ltd_plot <- sjPlot::plot_model(
+    glmm_cci_3,
+    terms = paste0("tsp_ltd_s [", ltd_limits[1], ":", ltd_limits[2], "]"),
+    type = "pred",
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    axis.title = c("TSP leaf trait dissimilarity (TSP-LTD)",
+     "Crown complementarity index (CCI)"),
+    title = "A"
+    ) +
+    scale_x_continuous(
+        breaks = ltd_breaks,
+        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 0)
+        ) +
+    coord_cartesian(xlim = ltd_limits, ylim = c(0, 1)) +
+    theme_classic() +
+    theme(
+        axis.text = element_text(size = axis_text_size),
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(size = axis_text_size),
+        axis.line = element_line(linetype = "blank"),
+        panel.border = element_rect(linewidth = 1),
+        plot.title = element_text(size = 30, face="bold")
+    )
+cci_scd_plot <- sjPlot::plot_model(
+    glmm_cci_3,
+    terms = paste0("tsp_scd_s [", scd_limits[1], ":", scd_limits[2]+0.1, "]"),
+    type = "pred",
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    axis.title = c("TSP Structural complexity dissimilarity (TSP-SCD)",
+     ""),
+    title = "B"
+    ) +
+    scale_x_continuous(
+        breaks = scd_breaks,
+        labels = function(x) round(descale_by(x, center_scd, scale_scd), 1)
+        ) +
+    coord_cartesian(xlim = scd_limits, ylim = c(0, 1)) +
+    theme_classic() +
+    theme(
+        axis.text.x = element_text(size = axis_text_size),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.line = element_line(linetype = "blank"),
+        panel.border = element_rect(linewidth = 1),
+        plot.title = element_text(size = 30, face="bold"),
+    )
+coi_ltd_plot <- sjPlot::plot_model(
+    glmm_coi_3,
+    terms = paste0("tsp_ltd_s [", ltd_limits[1], ":", ltd_limits[2], "]"),
+    type = "pred",
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    axis.title = c("TSP leaf trait dissimilarity (TSP-LTD)",
+     "Crown overlap index (COI)"),
+    title = "C"
+    ) +
+    scale_x_continuous(
+        breaks = ltd_breaks,
+        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 0)
+        ) +
+    scale_y_continuous(
+      breaks = coi_breaks
+    ) +
+    coord_cartesian(xlim = ltd_limits, ylim = coi_limits) +
+    theme_classic() +
+    theme(
+        axis.text = element_text(size = axis_text_size),
+        axis.title.x = element_text(size = axis_text_size, margin=margin(20,0,0,0)),
+        axis.title.y = element_text(size = axis_text_size),
+        axis.line = element_line(linetype = "blank"),
+        panel.border = element_rect(linewidth = 1),
+        plot.title = element_text(size = 30, face="bold")
+    )
+coi_scd_plot <- sjPlot::plot_model(
+    glmm_coi_3,
+    terms = paste0("tsp_scd_s [", scd_limits[1], ":", scd_limits[2]+0.1, "]"),
+    type = "pred",
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    axis.title = c("TSP Structural complexity dissimilarity (TSP-SCD)",
+     ""),
+    title = "D"
+    ) +
+    scale_x_continuous(
+        breaks = scd_breaks,
+        labels = function(x) round(descale_by(x, center_scd, scale_scd), 1)
+        ) +
+    scale_y_continuous(
+      breaks = coi_breaks
+    ) +
+    coord_cartesian(xlim = scd_limits, ylim = coi_limits) +
+    theme_classic() +
+    theme(
+        axis.text.x = element_text(size = axis_text_size),
+        axis.title.x = element_text(size = axis_text_size, margin=margin(20,0,0,0)),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.line = element_line(linetype = "blank"),
+        panel.border = element_rect(linewidth = 1),
+        plot.title = element_text(size = 30, face="bold"),
+    )
+
+figure_3 <- wrap_plots(cci_ltd_plot, cci_scd_plot, coi_ltd_plot, coi_scd_plot, nrow = 2)
+ggsave(file = path(figure_path, "figure_3.svg"),
+    plot = figure_3,
+    width=14,
+    height=14)
+ggsave(file = path(figure_path, "figure_s2.svg"),
+    plot = plot(figure_s2))
+ggsave(file = path(figure_path, "figure_s3.svg"),
+    plot = plot(figure_s3))
+table_1_1 <- tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_1.doc"))
+tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_1.doc"))
+table_1_2 <- tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_2.doc"))
+tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_2.doc"))
+```
+
+### Figure
+```{r}
+#| fig-width: 14
+#| fig-height: 14
+
+figure_3
+table_1_1
+table_1_2
+```
+
+# Appendix
+
+## Figure S1 - 3
+```{r}
+figure_s1
+figure_s2
+figure_s3
+```
+
+## Figure S4
+### Model
+```{r}
+glmm_ltd_scd <- glmmTMB::glmmTMB(tsp_scd ~ tsp_ltd + (1|tsp_comp),
+                         family = gaussian(),
+                         data = full_data,
+                         REML = TRUE)
+summary(glmm_ltd_scd)
+performance::r2(glmm_ltd_scd)
+confint(glmm_cci_3, parm="beta_", method="Wald")
+```
+
+```{r}
+#| echo: false
+#| output: false
+
+figure_s4 <- sjPlot::plot_model(
+    glmm_ltd_scd,
+    term = "tsp_ltd",
+    type = "pred",
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    title = "",
+    axis.title = c("TSP Leaf trait dissimilarity (TSP-LTD)",
+     "TSP Structural complexity dissimilarity (TSP-SCD)")
+    ) +
+    scale_x_continuous(breaks = seq(0, 200, 20)) +
+    scale_y_continuous(breaks = seq(0, 1.4, 0.2)) +
+    coord_cartesian(xlim = c(0, 200), ylim = c(0, 1.4)) +
+    theme_classic() +
+    theme(
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20)
+    )
+
+ggsave(file = path(figure_path, "figure_s4.svg"),
+    plot = figure_s4,
+    width=7,
+    height=7)
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 7
+
+figure_s4
+```
+
+## Figure S5
+
+```{r}
+#| echo: false
+#| output: false
+
+mono_data <- filter(full_data, tsp_div == "mono")
+mono_data_decid <- filter(mono_data, tsp_habits == "deciduous")
+mono_data_ever <- filter(mono_data, tsp_habits == "evergreen")
+
+cci_habit_plot <- ggplot(mono_data, aes(tsp_habits, cci)) +
+    geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
+    scale_y_continuous(
+      breaks = seq(0, 1, 0.2)
+    ) +
+    coord_cartesian(ylim = c(0, 1)) +
+    theme_classic() +
+    ylab("CCI") +
+    theme(
+        plot.title = element_text(size = 20, hjust = 0.5),
+        axis.text = element_text(size = 20),
+        axis.text.x = element_blank(),
+        axis.title = element_text(size = 20),
+        axis.title.x = element_blank()
+    )
+ltd_habit_plot <- ggplot(mono_data, aes(tsp_habits, tsp_ltd)) +
+    geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
+    theme_classic() +
+    scale_y_continuous(
+      breaks = seq(0, 100, 20)
+    ) +
+    coord_cartesian(ylim = c(0, 100)) +
+    scale_x_discrete(labels=c(nrow(mono_data_decid),
+                             nrow(mono_data_ever))) +
+    xlab("n") +
+    ylab("TSP-LTD") +
+    theme(
+        plot.title = element_text(size = 20, hjust = 0.5),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20)
+    )
+scd_habit_plot <- ggplot(mono_data, aes(tsp_habits, tsp_scd)) +
+    geom_violin(aes(fill = tsp_habits)) +
+    theme_classic() +
+    xlab("Leaf habit") +
+    ylab("TSP-SCD") +
+    xlab("n") +
+    labs(fill = "Leaf habit") +
+    scale_y_continuous(
+      breaks = seq(0, 1, 0.2)
+    ) +
+    coord_cartesian(ylim = c(0, 1)) +
+    scale_x_discrete(labels=c(nrow(mono_data_decid),
+                             nrow(mono_data_ever))) +
+    theme(
+        legend.text = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20)
+    )
+coi_habit_plot <- ggplot(mono_data, aes(tsp_habits, coi)) +
+    geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
+    scale_y_continuous(
+      breaks = seq(0, 0.5, 0.1),
+    ) +
+    coord_cartesian(ylim = c(0, 0.5)) +
+    theme_classic() +
+    xlab("Leaf habit") +
+    ylab("COI") +
+    theme(
+        axis.text.x = element_blank(),
+        axis.text = element_text(size = 20),
+        axis.title.x = element_blank(),
+        axis.title = element_text(size = 20)
+    )
+
+figure_s5 <- wrap_plots(cci_habit_plot, coi_habit_plot, ltd_habit_plot, scd_habit_plot, nrow = 2)
+ggsave(file = path(figure_path, "figure_s5.svg"),
+    plot = figure_s5,
+    width=14,
+    height=14)
+```
+
+```{r}
+figure_s5
+```
+
+## Figure S6
+```{r}
+data_mono <- filter(full_data, tsp_div == "mono")
+data_mix <- filter(full_data, tsp_div == "mix")
+
+ltd_div_plot <- ggplot(full_data, aes(tsp_div, tsp_ltd)) +
+    geom_violin(aes(fill = tsp_div), show.legend = FALSE) +
+    theme_classic() +
+    scale_y_continuous(
+      breaks = seq(0, 200, 40)
+    ) +
+    coord_cartesian(ylim = c(0, 200)) +
+    scale_x_discrete(labels=c(nrow(data_mono),
+                             nrow(data_mix))) +
+    xlab("n") +
+    ylab("TSP-LTD") +
+    theme(
+        plot.title = element_text(size = 20, hjust = 0.5),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20)
+    )
+scd_div_plot <- ggplot(full_data, aes(tsp_div, tsp_scd)) +
+    geom_violin(aes(fill = tsp_div)) +
+    theme_classic() +
+    xlab("Leaf habit") +
+    ylab("TSP-SCD") +
+    xlab("n") +
+    labs(fill = "TSP diversity") +
+    scale_y_continuous(
+      breaks = seq(0, 1.4, 0.2)
+    ) +
+    scale_x_discrete(labels=c(nrow(data_mono),
+                             nrow(data_mix))) +
+    coord_cartesian(ylim = c(0, 1.4)) +
+    theme(
+        legend.text = element_text(size = 20),
+        legend.title = element_text(size = 20),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20)
+    )
+
+figure_s6 <- wrap_plots(ltd_div_plot, scd_div_plot)
+ggsave(file = path(figure_path, "figure_s6.svg"),
+    plot = figure_s6,
+    width=14,
+    height=7)
+```
+
+```{r}
+#| fig-width: 14
+#| fig-height: 7
+
+figure_s6
+```
+
+## Figure S7
+### Models
+```{r}
+
+sep_data <- full_data %>%
+    filter(tsp_div == "mono") %>%
+    mutate(tsp_ltd_s = as.numeric(scale(tsp_ltd)))
+
+glmm_cci_sep <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s:tsp_habits +
+                                        tsp_scd_s:tsp_habits +
+                                  (1|tsp_comp),
+                         family = glmmTMB::beta_family(),
+                         data = sep_data,
+                         REML = TRUE)
+summary(glmm_cci_sep)
+confint(glmm_cci_sep, parm="beta_", method="Wald")
+performance::r2(glmm_cci_sep)
+
+glmm_coi_sep <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s:tsp_habits +
+                                      tsp_scd_s:tsp_habits +
+                                  (1|tsp_comp),
+                         family = glmmTMB::beta_family(),
+                         data = sep_data,
+                         REML = TRUE)
+summary(glmm_coi_sep)
+confint(glmm_coi_sep, parm="beta_", method="Wald")
+performance::r2(glmm_coi_sep)
+```
+
+```{r}
+#| echo: false
+#| output: false
+
+scale_data_sep <- tibble(
+    var = c("tsp_ltd", "tsp_scd")
+) %>%
+    mutate(center = attr(scale(sep_data[var]), "scaled:center")) %>%
+    mutate(scale = attr(scale(sep_data[var]), "scaled:scale"))
+
+center_ltd_sep <- scale_data_sep$center[scale_data_sep$var == "tsp_ltd"]
+scale_ltd_sep <- scale_data_sep$scale[scale_data_sep$var == "tsp_ltd"]
+center_scd_sep <- scale_data_sep$center[scale_data_sep$var == "tsp_scd"]
+scale_scd_sep <- scale_data_sep$scale[scale_data_sep$var == "tsp_scd"]
+
+ltd_sep_limits <- scale_by(c(0, 105), center_ltd_sep, scale_ltd_sep)
+ltd_sep_breaks <- scale_by(seq(0, 100, 20), center_ltd_sep, scale_ltd_sep)
+scd_sep_limits <- scale_by(c(0, 1), center_scd_sep, scale_scd_sep)
+scd_sep_breaks <- scale_by(seq(0, 1, 0.2), center_scd_sep, scale_scd_sep)
+
+cci_ltd_sep <- sjPlot::plot_model(
+    glmm_cci_sep,
+    type = "pred",
+    terms = c(paste0("tsp_ltd_s [", ltd_sep_limits[1], ":", ltd_sep_limits[2], "]"), "tsp_habits"),
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    title = "A",
+    axis.title = c("",
+     "CCI"),
+    ) +
+    scale_x_continuous(
+        breaks = ltd_sep_breaks,
+        labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 1)
+        ) +
+    scale_y_continuous(
+      breaks = seq(0, 1, 0.2),
+    ) +
+    coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 1)) +
+    theme_classic() +
+    theme(
+        legend.position = "none",
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        axis.line = element_line(linetype = "blank"),
+        plot.title = element_text(size = 30, face="bold"),
+        panel.border = element_rect(linewidth = 1)
+    )
+for (i in seq_along(cci_ltd_sep$layers)) {
+  if ("GeomLine" %in% class(cci_ltd_sep$layers[[i]]$geom)) {
+    cci_ltd_sep$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+cci_scd_sep <- sjPlot::plot_model(
+    glmm_cci_sep,
+    type = "pred",
+    terms = c(paste0("tsp_scd_s [", scd_sep_limits[1], ":", scd_sep_limits[2], "]"), "tsp_habits"),
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    title = "B",
+    axis.title = c("",
+     ""),
+    ) +
+    scale_x_continuous(
+        breaks = scd_sep_breaks,
+        labels = function(x) round(descale_by(x, center_scd_sep, scale_scd_sep), 1)
+        ) +
+    scale_y_continuous(
+      breaks = seq(0, 1, 0.2),
+    ) +
+    labs(colour = "Leaf habit") +
+    coord_cartesian(xlim = scd_sep_limits, ylim = c(0, 1)) +
+    theme_classic() +
+    theme(
+        legend.title = element_text(size = 20),
+        legend.text = element_text(size = 20),
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        axis.line = element_line(linetype = "blank"),
+        plot.title = element_text(size = 30, face="bold"),
+        panel.border = element_rect(linewidth = 1)
+    )
+
+coi_ltd_sep <- sjPlot::plot_model(
+    glmm_coi_sep,
+    type = "pred",
+    terms = c(paste0("tsp_scd_s [", ltd_sep_limits[1], ":", ltd_sep_limits[2], "]"), "tsp_habits"),
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    title = "C",
+    legend.title = "Leaf habit",
+    axis.title = c("TSP-LTD",
+     "COI"),
+    ) +
+    scale_x_continuous(
+        breaks = ltd_sep_breaks,
+        labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 0)
+        ) +
+    scale_y_continuous(
+      breaks = seq(0, 0.5, 0.1),
+    ) +
+    coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 0.5)) +
+    theme_classic() +
+    theme(
+        legend.position = "none",
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        axis.line = element_line(linetype = "blank"),
+        plot.title = element_text(size = 30, face="bold"),
+        panel.border = element_rect(linewidth = 1)
+    )
+for (i in seq_along(coi_ltd_sep$layers)) {
+  if ("GeomLine" %in% class(coi_ltd_sep$layers[[i]]$geom)) {
+    coi_ltd_sep$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+coi_scd_sep <- sjPlot::plot_model(
+    glmm_coi_sep,
+    type = "pred",
+    terms = c(paste0("tsp_scd_s [", scd_sep_limits[1], ":", scd_sep_limits[2], "]"), "tsp_habits"),
+    show.data = TRUE,
+    dot.size = 4,
+    line.size = 1.5,
+    title = "D",
+    legend.title = "Leaf habit",
+    axis.title = c("TSP-SCD",
+     ""),
+    ) +
+    scale_x_continuous(
+        breaks = scd_sep_breaks,
+        labels = function(x) round(descale_by(x, center_scd_sep, scale_scd_sep), 1)
+        ) +
+    scale_y_continuous(
+      breaks = seq(0, 0.5, 0.1),
+    ) +
+    coord_cartesian(xlim = scd_sep_limits, ylim = c(0, 0.5)) +
+    aes(linetype=rev(group), color=group) +
+    theme_classic() +
+    theme(
+        legend.position = "none",
+        axis.text = element_text(size = 20),
+        axis.title = element_text(size = 20),
+        axis.line = element_line(linetype = "blank"),
+        plot.title = element_text(size = 30, face="bold"),
+        panel.border = element_rect(linewidth = 1)
+    )
+
+figure_s7 <- wrap_plots(cci_ltd_sep, cci_scd_sep, coi_ltd_sep, coi_scd_sep, nrow = 2)
+
+ggsave(file = path(figure_path, "figure_s7.svg"),
+    plot = figure_s7,
+    width=15,
+    height=14)
+table_s1_1 <- tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
+tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
+table_s1_2 <- tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
+tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
+```
+
+### Figure
+```{r}
+#| fig-width: 14
+#| fig-height: 14
+
+figure_s7
+```

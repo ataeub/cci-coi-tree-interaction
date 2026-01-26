@@ -1,0 +1,105 @@
+---
+title: "Hugging trees - Structural analysis"
+author: "Alexander Täuber"
+format:
+  html:
+    css: styles.css
+    self-contained: true
+    toc: true
+    number-sections: true
+project:
+    execute-dir: project
+execute:
+  warning: false
+  message: false
+---
+
+# Libraries & local scripts
+```{r}
+#| label: Preparations
+#| eval: false
+
+library(magrittr)
+
+source(here::here("src/make_manifest.R"))
+source(here::here("src/trees_to_tsps.R"))
+source(here::here("src/compute_tsp_structure.R"))
+source(here::here("src/compute_tsp_traits.R"))
+```
+
+# Set global variables
+
+We can change the algorithm parameters for the run by changing the values in the parameters list.
+```{r}
+#| label: Global variables
+#| eval: false
+
+single_tree_p <- here::here("data/raw/single_trees")
+tree_data_p <- here::here("data/processed/tree_level_data.csv")
+output_p <- here::here("data/results/tsp_data.csv")
+
+parameters <- list(
+  vox_res = 0.01,
+  coi_d_max = 0.3,
+  cci_strata_size = 0.3,
+  cci_strata_hull_type = "concave",
+  boxdim_threshold = 0.1
+)
+```
+
+# Prepare the data for processing
+
+- `make_manifest()` examines the directory with the single tree point clouds and compares it to our list of TSPs with pre-existing data on them (ID, species, etc.)
+- `calculate_tsp_traits()` extracts the trait related data. In our case only the TSP-LTD and the species composition of the TSP.
+- `trees_to_tsps()` is basically just widening our data from one-row-per-tree to one-row-per-TSP
+Here we  and compare it 
+```{r}
+#| label: Data preparation
+#| eval: false
+
+tree_data <- make_manifest(
+  tree_table_path = tree_data_p,
+  single_tree_path = single_tree_p
+)
+
+traits <- tree_data %>%
+  calculate_tsp_traits()
+
+tsp_data <- tree_data %>%
+  trees_to_tsps() %>%
+  dplyr::filter(!is.na(tree1_pc_path) & !is.na(tree2_pc_path)) %>%
+  dplyr::left_join(traits, by = "tsp")
+```
+
+# Structural data processing
+
+- The magic happens in `compute_tsp_structure()` where the functions from the `coi` package are used to extract the structural variables from the point clouds
+- Since the computation is quite resource intensive we use `future` and `furrr` to parallelize the computation to n-1 available physical CPU cores
+
+```{r}
+#| label: Data processing
+#| eval: false
+
+# Using the amount of physical cores minus one
+cores_to_use <- parallelly::availableCores(logical = FALSE) - 1
+future::plan(multisession, workers = cores_to_use)
+progressr::handlers("cli")
+options(progressr.show_after = 0)
+
+progressr::with_progress({
+  p <- progressr::progressor(steps = nrow(tsp_data))
+
+  full_data <- tsp_data %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      results = furrr::future_pmap(
+        list(tree1_pc_path, tree2_pc_path),
+        ~ compute_tsp_structure(..1, ..2, parameters, p),
+        .options = furrr::furrr_options(seed = TRUE)
+      )
+    ) %>%
+    tidyr::unnest_wider(results)
+})
+
+readr::write_csv(full_data, output_p)
+```

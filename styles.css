@@ -1,0 +1,14 @@
+.cell > .sourceCode {
+  background-color: #f3f6ff;
+  border-left: 4px solid #9cabd6;
+  border-radius: 6px;
+  padding: 0.5em;
+}
+
+.cell-output {
+  background-color: #f3fdee;
+  border-left: 4px solid #8fad80;
+  padding: 0.75em 1em;
+  border-radius: 8px;
+  margin: 0.5em 0 1.5em 0;
+}
