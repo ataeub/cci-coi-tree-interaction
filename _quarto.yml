@@ -8,7 +8,7 @@ project:
     - "!README.md"
 
 website:
-  title: "Code for: Täuber et al. (2026) in prep."
+  title: "Code for: Täuber et al. (in prep.)"
   navbar:
     left:
       - href: structural_analysis.qmd
