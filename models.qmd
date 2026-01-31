@@ -16,7 +16,7 @@ execute:
   message: false
 ---
 
-# Required libraries, options and paths
+# Required libraries, options, and paths
 ```{r}
 #| output: false
 
@@ -115,8 +115,8 @@ ltd_limits <- scale_by(c(0, 220), center_ltd, scale_ltd)
 ltd_breaks <- scale_by(seq(0, 200, 20), center_ltd, scale_ltd)
 scd_limits <- scale_by(c(0, 1.45), center_scd, scale_scd)
 scd_breaks <- scale_by(seq(0, 1.4, 0.2), center_scd, scale_scd)
-coi_limits <- c(0, 0.5)
-coi_breaks <- seq(0, 1, 0.1)
+coi_limits <- c(0, 0.4)
+coi_breaks <- seq(0, 0.4, 0.1)
 ```
 
 # Main
@@ -446,6 +446,7 @@ ggsave(file = path(figure_path, "figure_s4.svg"),
     height=7)
 ```
 
+### Figure
 ```{r}
 #| fig-width: 7
 #| fig-height: 7
@@ -516,9 +517,9 @@ scd_habit_plot <- ggplot(mono_data, aes(tsp_habits, tsp_scd)) +
 coi_habit_plot <- ggplot(mono_data, aes(tsp_habits, coi)) +
     geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
     scale_y_continuous(
-      breaks = seq(0, 0.5, 0.1),
+      breaks = seq(0, 0.4, 0.1),
     ) +
-    coord_cartesian(ylim = c(0, 0.5)) +
+    coord_cartesian(ylim = c(0, 0.4)) +
     theme_classic() +
     xlab("Leaf habit") +
     ylab("COI") +
@@ -726,9 +727,9 @@ coi_ltd_sep <- sjPlot::plot_model(
         labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 0)
         ) +
     scale_y_continuous(
-      breaks = seq(0, 0.5, 0.1),
+      breaks = seq(0, 0.4, 0.1),
     ) +
-    coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 0.5)) +
+    coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 0.4)) +
     theme_classic() +
     theme(
         legend.position = "none",
@@ -760,9 +761,9 @@ coi_scd_sep <- sjPlot::plot_model(
         labels = function(x) round(descale_by(x, center_scd_sep, scale_scd_sep), 1)
         ) +
     scale_y_continuous(
-      breaks = seq(0, 0.5, 0.1),
+      breaks = seq(0, 0.4, 0.1),
     ) +
-    coord_cartesian(xlim = scd_sep_limits, ylim = c(0, 0.5)) +
+    coord_cartesian(xlim = scd_sep_limits, ylim = c(0, 0.4)) +
     aes(linetype=rev(group), color=group) +
     theme_classic() +
     theme(
