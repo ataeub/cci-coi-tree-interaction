@@ -14,6 +14,14 @@ execute:
   message: false
 ---
 
+# Install the `coi` package
+```{r}
+#| label: Install coi
+#| eval: false
+# install.packages("devtools")
+devtools::install_github("ataeub/coi")
+```
+
 # Libraries & local scripts
 ```{r}
 #| label: Preparations
