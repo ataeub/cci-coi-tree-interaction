@@ -10,15 +10,8 @@ data/results/figures/*
 
 sandbox/
 
-*.html
-
 .Rproj.user
 .Rhistory
 
 /.quarto/
-/doc/
-/Meta/
 **/.quarto/
-
-/.luarc.json
-**/*.quarto_ipynb
