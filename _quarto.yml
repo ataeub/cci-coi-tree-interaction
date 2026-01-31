@@ -1,0 +1,20 @@
+project:
+  type: website
+  output-dir: docs
+  execute-dir: project
+  render:
+    - "*.qmd"
+    - "!sandbox/"
+
+website:
+  title: "Code for: Paper title"
+  navbar:
+    left:
+      - href: structural_analysis.qmd
+        text: Structural data analysis
+      - href: models.qmd
+        text: Statistical analysis + Figures
+
+format:
+  html:
+    theme: cosmo
