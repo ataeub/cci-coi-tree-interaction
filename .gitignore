@@ -15,9 +15,6 @@ sandbox/
 .Rproj.user
 .Rhistory
 
-inst/doc
-docs
-
 /.quarto/
 /doc/
 /Meta/
