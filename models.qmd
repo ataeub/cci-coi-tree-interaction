@@ -200,7 +200,7 @@ glmm_cci <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s +
                                    (1|tsp_comp),
                          family = glmmTMB::beta_family(link = "logit"),
                          data = full_data,
-                         REML = TRUE)
+                         REML = FALSE)
 
 summary(glmm_cci)
 
@@ -215,6 +215,13 @@ summary(glmm_cci_2)
 glmm_cci_3 <- update(glmm_cci_2, ~ . - I(tsp_ltd_s^2))
 MuMIn::AICc(glmm_cci_2, glmm_cci_3)
 summary(glmm_cci_3)
+
+glmm_cci_3 <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s +
+                                   tsp_scd_s +
+                                   (1|tsp_comp),
+                         family = glmmTMB::beta_family(link = "logit"),
+                         data = full_data,
+                         REML = TRUE)
 
 summary(glmm_cci_3)
 confint(glmm_cci_3, parm="beta_", method="Wald")
@@ -232,7 +239,7 @@ glmm_coi <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s +
                                    (1|tsp_comp),
                          family = glmmTMB::beta_family(),
                          data = full_data,
-                         REML = TRUE)
+                         REML = FALSE)
 summary(glmm_coi)
 
 glmm_coi_1 <- update(glmm_coi, ~ . - I(tsp_ltd_s^2))
@@ -247,6 +254,12 @@ glmm_coi_3 <- update(glmm_coi_2, ~ . - ln_n_s)
 MuMIn::AICc(glmm_coi_2, glmm_coi_3)
 summary(glmm_coi_3)
 
+glmm_coi_3 <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s +
+                                   tsp_scd_s +
+                                   (1|tsp_comp),
+                         family = glmmTMB::beta_family(),
+                         data = full_data,
+                         REML = TRUE)
 summary(glmm_coi_3)
 confint(glmm_coi_3, parm="beta_", method="Wald")
 performance::r2(glmm_coi_3)
