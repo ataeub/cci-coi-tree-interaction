@@ -292,6 +292,7 @@ cci_ltd_plot <- sjPlot::plot_model(
     theme_classic() +
     theme(
         axis.text = element_text(size = axis_text_size),
+        axis.text.x = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = axis_text_size),
         axis.line = element_line(linetype = "blank"),
@@ -316,8 +317,7 @@ cci_scd_plot <- sjPlot::plot_model(
     coord_cartesian(xlim = scd_limits, ylim = c(0, 1)) +
     theme_classic() +
     theme(
-        axis.text.x = element_text(size = axis_text_size),
-        axis.text.y = element_blank(),
+        axis.text = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.line = element_line(linetype = "blank"),
@@ -677,6 +677,7 @@ cci_ltd_sep <- sjPlot::plot_model(
     theme(
         legend.position = "none",
         axis.text = element_text(size = 20),
+        axis.text.x = element_blank(),
         axis.title = element_text(size = 20),
         axis.line = element_line(linetype = "blank"),
         plot.title = element_text(size = 30, face="bold"),
@@ -712,7 +713,7 @@ cci_scd_sep <- sjPlot::plot_model(
     theme(
         legend.title = element_text(size = 20),
         legend.text = element_text(size = 20),
-        axis.text = element_text(size = 20),
+        axis.text = element_blank(),
         axis.title = element_text(size = 20),
         axis.line = element_line(linetype = "blank"),
         plot.title = element_text(size = 30, face="bold"),
@@ -778,6 +779,7 @@ coi_scd_sep <- sjPlot::plot_model(
     theme(
         legend.position = "none",
         axis.text = element_text(size = 20),
+        axis.text.y = element_blank(),
         axis.title = element_text(size = 20),
         axis.line = element_line(linetype = "blank"),
         plot.title = element_text(size = 30, face="bold"),
