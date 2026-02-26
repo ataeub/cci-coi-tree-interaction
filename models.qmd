@@ -736,9 +736,7 @@ coi_ltd_sep <- sjPlot::plot_model(
         breaks = ltd_sep_breaks,
         labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 1)
         ) +
-    scale_y_continuous(
-      breaks = seq(0, 0.4, 0.1),
-    ) +
+    scale_y_continuous(breaks = seq(0, 0.4, 0.1)) +
     coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 0.4)) +
     theme_classic() +
     theme(
@@ -770,9 +768,7 @@ coi_scd_sep <- sjPlot::plot_model(
         breaks = scd_sep_breaks,
         labels = function(x) round(descale_by(x, center_scd_sep, scale_scd_sep), 1)
         ) +
-    scale_y_continuous(
-      breaks = seq(0, 0.4, 0.1),
-    ) +
+    scale_y_continuous(breaks = seq(0, 0.4, 0.1)) +
     coord_cartesian(xlim = scd_sep_limits, ylim = c(0, 0.4)) +
     aes(linetype=rev(group), color=group) +
     theme_classic() +
