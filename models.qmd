@@ -408,8 +408,8 @@ tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file =
 #| fig-height: 14
 
 figure_3
-table_s2_a
-table_s2_b
+table_1_b
+table_1_c
 ```
 
 # Appendix
