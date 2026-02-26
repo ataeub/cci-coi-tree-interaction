@@ -430,7 +430,7 @@ glmm_ltd_scd <- glmmTMB::glmmTMB(tsp_scd ~ tsp_ltd + (1|tsp_comp),
                          REML = TRUE)
 summary(glmm_ltd_scd)
 performance::r2(glmm_ltd_scd)
-confint(glmm_cci_3, parm="beta_", method="Wald")
+confint(glmm_ltd_scd, parm="beta_", method="Wald")
 ```
 
 ```{r}
