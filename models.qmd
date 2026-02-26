@@ -111,8 +111,8 @@ scale_ln_sr <- scale_data$scale[scale_data$var == "ln_sr"]
 scale_ln_n <- scale_data$scale[scale_data$var == "ln_n"]
 scale_coi <- scale_data$scale[scale_data$var == "coi"]
 
-ltd_limits <- scale_by(c(0, 220), center_ltd, scale_ltd)
-ltd_breaks <- scale_by(seq(0, 200, 20), center_ltd, scale_ltd)
+ltd_limits <- scale_by(c(0, 4), center_ltd, scale_ltd)
+ltd_breaks <- scale_by(seq(0, 4, 0.5), center_ltd, scale_ltd)
 scd_limits <- scale_by(c(0, 1.45), center_scd, scale_scd)
 scd_breaks <- scale_by(seq(0, 1.4, 0.2), center_scd, scale_scd)
 coi_limits <- c(0, 0.4)
@@ -286,7 +286,7 @@ cci_ltd_plot <- sjPlot::plot_model(
     ) +
     scale_x_continuous(
         breaks = ltd_breaks,
-        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 0)
+        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 1)
         ) +
     coord_cartesian(xlim = ltd_limits, ylim = c(0, 1)) +
     theme_classic() +
@@ -337,7 +337,7 @@ coi_ltd_plot <- sjPlot::plot_model(
     ) +
     scale_x_continuous(
         breaks = ltd_breaks,
-        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 0)
+        labels = function(x) round(descale_by(x, center_ltd, scale_ltd), 1)
         ) +
     scale_y_continuous(
       breaks = coi_breaks
@@ -448,9 +448,9 @@ figure_s4 <- sjPlot::plot_model(
     axis.title = c("TSP Leaf trait dissimilarity (LTD)",
      "TSP Structural complexity dissimilarity (SCD)")
     ) +
-    scale_x_continuous(breaks = seq(0, 200, 20)) +
+    scale_x_continuous(breaks = seq(0, 4, 0.5)) +
     scale_y_continuous(breaks = seq(0, 1.4, 0.2)) +
-    coord_cartesian(xlim = c(0, 200), ylim = c(0, 1.4)) +
+    coord_cartesian(xlim = c(0, 4), ylim = c(0, 1.4)) +
     theme_classic() +
     theme(
         axis.text = element_text(size = 20),
@@ -483,9 +483,7 @@ mono_data_ever <- filter(mono_data, tsp_habits == "evergreen")
 
 cci_habit_plot <- ggplot(mono_data, aes(tsp_habits, cci)) +
     geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
-    scale_y_continuous(
-      breaks = seq(0, 1, 0.2)
-    ) +
+    scale_y_continuous(breaks = seq(0, 1, 0.2)) +
     coord_cartesian(ylim = c(0, 1)) +
     theme_classic() +
     ylab("CCI") +
@@ -499,10 +497,8 @@ cci_habit_plot <- ggplot(mono_data, aes(tsp_habits, cci)) +
 ltd_habit_plot <- ggplot(mono_data, aes(tsp_habits, tsp_ltd)) +
     geom_violin(aes(fill = tsp_habits), show.legend = FALSE) +
     theme_classic() +
-    scale_y_continuous(
-      breaks = seq(0, 100, 20)
-    ) +
-    coord_cartesian(ylim = c(0, 100)) +
+    scale_y_continuous(breaks = seq(0, 2.4, 0.4)) +
+    coord_cartesian(ylim = c(0, 2.4)) +
     scale_x_discrete(labels=c(nrow(mono_data_decid),
                              nrow(mono_data_ever))) +
     xlab("n") +
@@ -566,10 +562,8 @@ data_mix <- filter(full_data, tsp_div == "mix")
 ltd_div_plot <- ggplot(full_data, aes(tsp_div, tsp_ltd)) +
     geom_violin(aes(fill = tsp_div), show.legend = FALSE) +
     theme_classic() +
-    scale_y_continuous(
-      breaks = seq(0, 200, 40)
-    ) +
-    coord_cartesian(ylim = c(0, 200)) +
+    scale_y_continuous(breaks = seq(0, 4, 0.5)) +
+    coord_cartesian(ylim = c(0, 4)) +
     scale_x_discrete(labels=c(nrow(data_mono),
                              nrow(data_mix))) +
     xlab("n") +
@@ -657,8 +651,8 @@ scale_ltd_sep <- scale_data_sep$scale[scale_data_sep$var == "tsp_ltd"]
 center_scd_sep <- scale_data_sep$center[scale_data_sep$var == "tsp_scd"]
 scale_scd_sep <- scale_data_sep$scale[scale_data_sep$var == "tsp_scd"]
 
-ltd_sep_limits <- scale_by(c(0, 105), center_ltd_sep, scale_ltd_sep)
-ltd_sep_breaks <- scale_by(seq(0, 100, 20), center_ltd_sep, scale_ltd_sep)
+ltd_sep_limits <- scale_by(c(0, 2.4), center_ltd_sep, scale_ltd_sep)
+ltd_sep_breaks <- scale_by(seq(0, 2.4, 0.4), center_ltd_sep, scale_ltd_sep)
 scd_sep_limits <- scale_by(c(0, 1), center_scd_sep, scale_scd_sep)
 scd_sep_breaks <- scale_by(seq(0, 1, 0.2), center_scd_sep, scale_scd_sep)
 
@@ -677,9 +671,7 @@ cci_ltd_sep <- sjPlot::plot_model(
         breaks = ltd_sep_breaks,
         labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 1)
         ) +
-    scale_y_continuous(
-      breaks = seq(0, 1, 0.2),
-    ) +
+    scale_y_continuous(breaks = seq(0, 1, 0.2)) +
     coord_cartesian(xlim = ltd_sep_limits, ylim = c(0, 1)) +
     theme_classic() +
     theme(
@@ -741,7 +733,7 @@ coi_ltd_sep <- sjPlot::plot_model(
     ) +
     scale_x_continuous(
         breaks = ltd_sep_breaks,
-        labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 0)
+        labels = function(x) round(descale_by(x, center_ltd_sep, scale_ltd_sep), 1)
         ) +
     scale_y_continuous(
       breaks = seq(0, 0.4, 0.1),
