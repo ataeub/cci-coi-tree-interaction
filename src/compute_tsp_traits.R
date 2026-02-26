@@ -1,11 +1,24 @@
-calculate_dist <- function(data, traits = c("sla", "cn", "ldmc")) {
+calculate_dist <- function(data) {
   data |>
+    dplyr::mutate(
+      sla_s = as.numeric(scale(sla)),
+      ldmc_s = as.numeric(scale(ldmc)),
+      cn_s = as.numeric(scale(cn))
+    ) |>
     dplyr::group_by(tsp) |>
-    dplyr::summarise(tsp_ltd = dist(
-      dplyr::pick(dplyr::all_of(traits))
-    )) |>
-    dplyr::mutate(tsp_ltd = round(as.numeric(tsp_ltd), 3))
+    dplyr::reframe(
+      tsp_ltd_old = {
+        dplyr::pick(dplyr::all_of(c("sla", "cn", "ldmc"))) |>
+          dist()
+      },
+      tsp_ltd = {
+        dplyr::pick(dplyr::all_of(c("sla_s", "cn_s", "ldmc_s"))) |>
+          dist()
+      }
+    ) |>
+    dplyr::ungroup()
 }
+
 
 # create_tsp_community_table <- function(data, include_tsp = FALSE) {
 #   tsp_community <- data |>
