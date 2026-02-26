@@ -723,7 +723,7 @@ cci_scd_sep <- sjPlot::plot_model(
 coi_ltd_sep <- sjPlot::plot_model(
     glmm_coi_sep,
     type = "pred",
-    terms = c(paste0("tsp_scd_s [", ltd_sep_limits[1], ":", ltd_sep_limits[2], "]"), "tsp_habits"),
+    terms = c(paste0("tsp_ltd_s [", ltd_sep_limits[1], ":", ltd_sep_limits[2], "]"), "tsp_habits"),
     show.data = TRUE,
     dot.size = 4,
     line.size = 1.5,
