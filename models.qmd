@@ -174,8 +174,8 @@ ggsave(
   width = 7,
   height = 7
 )
-table_1 <- tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1.doc"))
-tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1.doc"))
+table_1_a <- tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_a.doc"))
+tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_a.doc"))
 ```
 
 ### Figure
@@ -184,7 +184,7 @@ tab_model(glmm_coi_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file
 #| fig-height: 7
 
 figure_2
-table_1
+table_1_a
 ```
 
 ## Figure 3
@@ -391,15 +391,15 @@ ggsave(file = path(figure_path, "figure_s2.svg"),
     plot = plot(figure_s2))
 ggsave(file = path(figure_path, "figure_s3.svg"),
     plot = plot(figure_s3))
-table_1_1 <- tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_1.doc"))
-tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_1.doc"))
-table_1_2 <- tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_2.doc"))
-tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_2.doc"))
+table_1_b <- tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_b.doc"))
+tab_model(glmm_cci_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_b.doc"))
+table_1_c <- tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_c.doc"))
+tab_model(glmm_coi_3, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_1_c.doc"))
 
-table_s2_1 <- tab_model(glmm_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_1.doc"))
-tab_model(glmm_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_1.doc"))
-table_s2_2 <- tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_1.doc"))
-tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_1.doc"))
+table_s2_a <- tab_model(glmm_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_a.doc"))
+tab_model(glmm_cci, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_a.doc"))
+table_s2_b <- tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_b.doc"))
+tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s2_b.doc"))
 ```
 
 ### Figure
@@ -408,8 +408,8 @@ tab_model(glmm_coi_1, show.se = TRUE, show.stat = TRUE, transform = NULL, file =
 #| fig-height: 14
 
 figure_3
-table_1_1
-table_1_2
+table_s2_a
+table_s2_b
 ```
 
 # Appendix
@@ -790,10 +790,10 @@ ggsave(file = path(figure_path, "figure_s7.svg"),
     plot = figure_s7,
     width=15,
     height=14)
-table_s1_1 <- tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
-tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
-table_s1_2 <- tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
-tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
+# table_s1_1 <- tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
+# tab_model(glmm_cci_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_1.doc"))
+# table_s1_2 <- tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
+# tab_model(glmm_coi_sep, show.se = TRUE, show.stat = TRUE, transform = NULL, file = file.path(figure_path, "table_s1_2.doc"))
 ```
 
 ### Figure
