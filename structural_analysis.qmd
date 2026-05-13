@@ -48,7 +48,7 @@ output_p <- here::here("data/results/tsp_data.csv")
 
 parameters <- list(
   vox_res = 0.01,
-  coi_d_max = 0.3,
+  coi_d_max = 0.645,
   cci_strata_size = 0.3,
   cci_strata_hull_type = "concave",
   boxdim_threshold = 0.1,
