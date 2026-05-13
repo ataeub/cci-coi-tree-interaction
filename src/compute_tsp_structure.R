@@ -7,9 +7,13 @@ compute_tsp_structure <- function(
   total_rows = NULL
 ) {
   cloud1 <- rlas::read.las(tree1_path, "xyz") |>
-    coi::voxelize(parameters[["vox_res"]])
+    coi::as_pt_cld() |>
+    coi::voxelize(parameters[["vox_res"]]) |>
+    coi::sor(6, 50)
   cloud2 <- rlas::read.las(tree2_path, "xyz") |>
-    coi::voxelize(parameters[["vox_res"]])
+    coi::as_pt_cld() |>
+    coi::voxelize(parameters[["vox_res"]]) |>
+    coi::sor(6, 50)
 
   size_tree1 <- nrow(cloud1)
   size_tree2 <- nrow(cloud2)
@@ -39,13 +43,15 @@ compute_tsp_structure <- function(
   sc1 <- coi::boxdim(
     cloud1,
     parameters[["boxdim_threshold"]],
-    warnings = FALSE
+    warnings = FALSE,
+    plot = FALSE
   )
 
   sc2 <- coi::boxdim(
     cloud2,
     parameters[["boxdim_threshold"]],
-    warnings = FALSE
+    warnings = FALSE,
+    plot = FALSE
   )
   if (!is.null(p)) p()
 
