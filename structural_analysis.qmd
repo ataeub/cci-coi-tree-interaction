@@ -112,3 +112,43 @@ progressr::with_progress({
 
 readr::write_csv(full_data, output_p)
 ```
+
+# COI - $d_{max}$ sensivity analysis
+
+```{r}
+#| label: Sensivity analysis
+#| eval: false
+dmax_values <- c(seq(0.1, 1, 0.1), 2, 4, 8, 16)
+vox_res <- 0.01
+
+cores_to_use <- parallelly::availableCores(logical = FALSE) - 1
+future::plan(multisession, workers = cores_to_use)
+progressr::handlers("cli")
+options(progressr.show_after = 0)
+
+progressr::with_progress({
+  p <- progressr::progressor(steps = nrow(tsp_data) * length(dmax_values))
+
+  coi_sensitivity <- tsp_data %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      results = furrr::future_pmap(
+        list(tree1_pc_path, tree2_pc_path),
+        ~ compute_tsp_coi_sensitivity(..1, ..2, dmax_values, vox_res, p),
+        .options = furrr::furrr_options(seed = TRUE)
+      )
+    ) %>%
+    tidyr::unnest(results)
+})
+
+output_p <- here::here("data/results/coi_sensitivity.csv")
+readr::write_csv(coi_sensitivity, output_p)
+
+library(ggplot2)
+coi_sensitivity %>%
+  dplyr::select(tsp, d_max, coi) %>%
+  ggplot(aes(x = coi)) +
+  geom_histogram() +
+  facet_wrap(~d_max)
+
+```

@@ -66,3 +66,36 @@ compute_tsp_structure <- function(
     height_tree2 = height_tree2
   )
 }
+
+compute_tsp_coi_sensitivity <- function(
+  tree1_path,
+  tree2_path,
+  dmax_values,
+  vox_res,
+  p = NULL
+) {
+  cloud1 <- rlas::read.las(tree1_path, "xyz") |>
+    coi::as_pt_cld() |>
+    coi::voxelize(vox_res)
+  cloud2 <- rlas::read.las(tree2_path, "xyz") |>
+    coi::as_pt_cld() |>
+    coi::voxelize(vox_res)
+
+  sensitivity <- tibble::tibble(d_max = dmax_values)
+  sensitivity$coi <- vapply(
+    sensitivity$d_max,
+    function(d_max) {
+      coi::coi(
+        cloud_i = cloud1,
+        cloud_j = cloud2,
+        d_max = d_max,
+        warnings = FALSE
+      )
+    },
+    numeric(1)
+  )
+
+  if (!is.null(p)) p()
+
+  sensitivity
+}
