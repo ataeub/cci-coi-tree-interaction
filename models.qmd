@@ -192,7 +192,7 @@ table_1_a
 #### Crown complementarity index (CCI)
 ```{r}
 
-glmm_cci <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s +
+glmm_cci <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s *
                                    tsp_scd_s +
                                    ln_sr_s +
                                    ln_n_s +
@@ -203,15 +203,15 @@ glmm_cci <- glmmTMB::glmmTMB(cci ~ tsp_ltd_s +
 
 summary(glmm_cci)
 
-glmm_cci_1 <- update(glmm_cci, ~ . - ln_sr_s)
+glmm_cci_1 <- update(glmm_cci, ~ . - ln_n_s)
 MuMIn::AICc(glmm_cci, glmm_cci_1)
 summary(glmm_cci_1)
 
-glmm_cci_2 <- update(glmm_cci_1, ~ . - ln_n_s)
+glmm_cci_2 <- update(glmm_cci_1, ~ . - tsp_ltd_s:tsp_scd_s)
 MuMIn::AICc(glmm_cci_1, glmm_cci_2)
 summary(glmm_cci_2)
 
-glmm_cci_3 <- update(glmm_cci_2, ~ . - I(tsp_ltd_s^2))
+glmm_cci_3 <- update(glmm_cci_2, ~ . - ln_sr_s)
 MuMIn::AICc(glmm_cci_2, glmm_cci_3)
 summary(glmm_cci_3)
 
@@ -230,9 +230,9 @@ performance::r2(glmm_cci_3)
 #### Crown overlap index (COI)
 ```{r}
 
-glmm_coi <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s +
-                                   I(tsp_ltd_s^2) +
+glmm_coi <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s *
                                    tsp_scd_s +
+                                   I(tsp_ltd_s^2) +
                                    ln_sr_s +
                                    ln_n_s +
                                    (1|tsp_comp),
@@ -245,13 +245,17 @@ glmm_coi_1 <- update(glmm_coi, ~ . - I(tsp_ltd_s^2))
 MuMIn::AICc(glmm_coi, glmm_coi_1)
 summary(glmm_coi_1)
 
-glmm_coi_2 <- update(glmm_coi_1, ~ . - ln_sr_s)
+glmm_coi_2 <- update(glmm_coi_1, ~ . - tsp_ltd_s:tsp_scd_s)
 MuMIn::AICc(glmm_coi_1, glmm_coi_2)
 summary(glmm_coi_2)
 
 glmm_coi_3 <- update(glmm_coi_2, ~ . - ln_n_s)
 MuMIn::AICc(glmm_coi_2, glmm_coi_3)
 summary(glmm_coi_3)
+
+glmm_coi_4 <- update(glmm_coi_3, ~ . - ln_sr_s)
+MuMIn::AICc(glmm_coi_3, glmm_coi_4)
+summary(glmm_coi_4)
 
 glmm_coi_3 <- glmmTMB::glmmTMB(coi ~ tsp_ltd_s +
                                    tsp_scd_s +
