@@ -143,12 +143,4 @@ progressr::with_progress({
 
 output_p <- here::here("data/results/coi_sensitivity.csv")
 readr::write_csv(coi_sensitivity, output_p)
-
-library(ggplot2)
-coi_sensitivity %>%
-  dplyr::select(tsp, d_max, coi) %>%
-  ggplot(aes(x = coi)) +
-  geom_histogram() +
-  facet_wrap(~d_max)
-
 ```
