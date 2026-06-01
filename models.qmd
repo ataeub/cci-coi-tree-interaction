@@ -893,7 +893,6 @@ figure_s8
 #| output: false
 
 size_data <- full_data %>%
-  mutate(tsp_size_diff = tsp_size_diff * vol_factor) %>%
   rowwise() %>%
   mutate(
     max_tree_height = max(c(height_tree1, height_tree2))
