@@ -18,8 +18,9 @@ execute:
 ```{r}
 #| label: Install coi
 #| eval: false
-# install.packages("devtools")
-devtools::install_github("ataeub/coi")
+
+# install.packages("remotes")
+remotes::install_github("ataeub/coi", ref = "v2.1.0")
 ```
 
 # Libraries & local scripts
