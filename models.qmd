@@ -356,6 +356,11 @@ coi_ltd_plot <- sjPlot::plot_model(
         panel.border = element_rect(linewidth = 1),
         plot.title = element_text(size = 30, face="bold")
     )
+for (i in seq_along(coi_ltd_plot$layers)) {
+  if ("GeomLine" %in% class(coi_ltd_plot$layers[[i]]$geom)) {
+    coi_ltd_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
 coi_scd_plot <- sjPlot::plot_model(
     glmm_coi_3,
     terms = paste0("tsp_scd_s [", scd_limits[1], ":", scd_limits[2]+0.1, "]"),
@@ -687,11 +692,6 @@ cci_ltd_sep <- sjPlot::plot_model(
         plot.title = element_text(size = 30, face="bold"),
         panel.border = element_rect(linewidth = 1)
     )
-for (i in seq_along(cci_ltd_sep$layers)) {
-  if ("GeomLine" %in% class(cci_ltd_sep$layers[[i]]$geom)) {
-    cci_ltd_sep$layers[[i]]$aes_params$linetype <- "dashed"
-  }
-}
 
 cci_scd_sep <- sjPlot::plot_model(
     glmm_cci_sep,
