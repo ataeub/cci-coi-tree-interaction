@@ -17,3 +17,5 @@ sandbox/
 **/.quarto/
 
 **/*.quarto_ipynb
+
+.Rprofile
