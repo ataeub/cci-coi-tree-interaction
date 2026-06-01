@@ -40,6 +40,12 @@ compute_tsp_structure <- function(
     warnings = FALSE
   )
 
+  ovlp_2d <- coi::co_2d(
+    cloud_i = cloud1,
+    cloud_j = cloud2,
+    warnings = FALSE
+  )
+
   sc1 <- coi::boxdim(
     cloud1,
     parameters[["boxdim_threshold"]],
@@ -58,6 +64,7 @@ compute_tsp_structure <- function(
   list(
     coi = coi_val,
     cci = cci_val,
+    ovlp_2d = ovlp_2d,
     sc_tree1 = round(sc1, 2),
     sc_tree2 = round(sc2, 2),
     size_tree1 = size_tree1,
