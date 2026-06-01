@@ -72,6 +72,7 @@ full_data <- read_csv(data_path) %>%
         tsp_ltd_s = as.numeric(scale(tsp_ltd)),
         cci_s = as.numeric(scale(cci)),
         coi_s = as.numeric(scale(coi)),
+        ovlp_2d_s = as.numeric(scale(ovlp_2d)),
         tsp_scd = abs(sc_tree1 - sc_tree2),
         tsp_scd_s = as.numeric(scale(tsp_scd)),
         ln_sr_s = as.numeric(scale(ln_sr)),
@@ -105,18 +106,20 @@ center_scd <- scale_data$center[scale_data$var == "tsp_scd"]
 center_ln_sr <- scale_data$center[scale_data$var == "ln_sr"]
 center_ln_n <- scale_data$center[scale_data$var == "ln_n"]
 center_coi <- scale_data$center[scale_data$var == "coi"]
+ovlp_2d <- scale_data$center[scale_data$var == "ovlp_2d"]
 scale_ltd <- scale_data$scale[scale_data$var == "tsp_ltd"]
 scale_scd <- scale_data$scale[scale_data$var == "tsp_scd"]
 scale_ln_sr <- scale_data$scale[scale_data$var == "ln_sr"]
 scale_ln_n <- scale_data$scale[scale_data$var == "ln_n"]
 scale_coi <- scale_data$scale[scale_data$var == "coi"]
+scale_ovlp_2d <- scale_data$scale[scale_data$var == "ovlp_2d"]
 
 ltd_limits <- scale_by(c(0, 4), center_ltd, scale_ltd)
 ltd_breaks <- scale_by(seq(0, 4, 0.5), center_ltd, scale_ltd)
 scd_limits <- scale_by(c(0, 1.45), center_scd, scale_scd)
 scd_breaks <- scale_by(seq(0, 1.4, 0.2), center_scd, scale_scd)
-coi_limits <- c(0, 0.4)
-coi_breaks <- seq(0, 0.4, 0.1)
+coi_limits <- c(0, 0.5)
+coi_breaks <- seq(0, 0.5, 0.1)
 ```
 
 # Main
@@ -804,4 +807,173 @@ ggsave(file = path(figure_path, "figure_s7.svg"),
 #| fig-height: 14
 
 figure_s7
+```
+
+## Figure S8
+
+```{r}
+#| echo: false
+#| output: false
+
+sens_data_path <- here("data/results/coi_sensitivity.csv")
+sens_data <- read_csv(sens_data_path) %>%
+mutate(d_max = factor(d_max))
+
+figure_s8_sub <- sens_data %>%
+  ggplot(aes(x = coi, colour = d_max, fill = d_max, group = d_max)) +
+  geom_density(alpha = 0.18, linewidth = 1.2) +
+  xlab("COI") +
+  ylab("Density") +
+  labs(
+    colour = expression(d[max]),
+    fill = expression(d[max])
+  ) +
+  scale_colour_brewer(palette = "Spectral") +
+  scale_fill_brewer(palette = "Spectral") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 80)) +
+  theme_classic() +
+  theme(
+    legend.position = "none",
+    axis.text = element_text(size = 10),
+    axis.text.x = element_blank(),
+    axis.title = element_text(size = 10),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    legend.title = element_text(size = 10),
+    legend.text = element_text(size = 10)
+  )
+
+figure_s8_main <- sens_data %>%
+  ggplot(aes(x = coi, colour = d_max, fill = d_max, group = d_max)) +
+  geom_density(alpha = 0.18, linewidth = 1.2) +
+  xlab("COI") +
+  ylab("Density") +
+  labs(
+    colour = expression(d[max]),
+    fill = expression(d[max])
+  ) +
+  scale_colour_brewer(palette = "Spectral") +
+  scale_fill_brewer(palette = "Spectral") +
+  scale_x_continuous(breaks = seq(0, 1, 0.1)) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 15)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 20)
+  )
+
+figure_s8 <- figure_s8_main +
+  annotation_custom(
+    ggplotGrob(figure_s8_sub), 
+    xmin = 0.05, xmax = 0.45, 
+    ymin = 9, ymax = 15
+    )
+ggsave(file = path(figure_path, "figure_s8.svg"),
+    plot = figure_s8,
+    width=8,
+    height=7)
+```
+
+```{r}
+#| fig-width: 8
+#| fig-height: 7
+
+figure_s8
+```
+
+## Figure S9
+
+```{r}
+#| echo: false
+#| output: false
+
+size_data <- full_data %>%
+  mutate(tsp_size_diff = tsp_size_diff * vol_factor) %>%
+  rowwise() %>%
+  mutate(
+    max_tree_height = max(c(height_tree1, height_tree2))
+  )
+
+figure_s9_1 <- size_data %>%
+  ggplot(aes(x = max_tree_height, y = coi)) +
+  geom_point(size = 3, alpha = 0.5) +
+  xlab("Maximum TSP tree height [m]") +
+  ylab("COI") +
+  theme_classic() +
+  theme(
+  axis.text = element_text(size = 20),
+  axis.title = element_text(size = 20),
+  panel.border = element_rect(linewidth = 1)
+  )
+
+figure_s9_2 <- size_data %>%
+  ggplot(aes(x = tsp_height_diff, y = cci)) +
+  geom_point(size = 3, alpha = 0.5) +
+  xlab("TSP tree height difference [m]") +
+  ylab("COI") +
+  theme_classic() +
+  theme(
+  axis.text = element_text(size = 20),
+  axis.text.y = element_blank(),
+  axis.title = element_text(size = 20),
+  axis.title.y = element_blank(),
+  panel.border = element_rect(linewidth = 1),
+  )
+
+figure_s9 <- wrap_plots(figure_s9_1 + figure_s9_2)
+
+ggsave(file = path(figure_path, "figure_s9.svg"),
+    plot = figure_s9,
+    width=14,
+    height=7)
+```
+
+```{r}
+#| fig-width: 14
+#| fig-height: 7
+
+figure_s9
+```
+
+# Extra Figure
+
+## COI vs. Height
+
+```{r}
+#| echo: false
+#| output: false
+
+full_data_2d <- full_data %>%
+  dplyr::filter(ovlp_2d > 0)
+
+lm_coi_ovlp2d <- lm(coi ~ ovlp_2d, data = full_data_2d)
+summary(lm_coi_ovlp2d)
+
+extra_coi_vs_height <- sjPlot::plot_model(
+    lm_coi_ovlp2d,
+    terms = "ovlp_2d [0:1]",
+    type = "pred",
+    show.data = TRUE,
+    title = "",
+    axis.title = c("2D Crown overlap", "COI"),
+    dot.size = 4,
+    line.size = 1.5) +
+    geom_abline(slope = 1, intercept = 0) +
+    coord_cartesian(xlim = c(0, 0.5), ylim = c(0, 0.5)) +
+    theme_classic() +
+    theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1)
+    )
+
+ggsave(file = path(figure_path, "extra_coi_vs_height.svg"),
+    plot = extra_coi_vs_height,
+    width=7,
+    height=7)
 ```
