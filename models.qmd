@@ -946,6 +946,7 @@ figure_s9
 ```{r}
 #| echo: false
 #| output: false
+#| eval: false
 
 full_data_2d <- full_data %>%
   dplyr::filter(ovlp_2d > 0)
