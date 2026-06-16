@@ -119,7 +119,7 @@ readr::write_csv(full_data, output_p)
 ```{r}
 #| label: Sensivity analysis
 #| eval: false
-dmax_values <- c(seq(0, 1, 0.2), 2, 4, 8, 16, 100)
+dmax_values <- c(seq(0, 1, 0.2), 2, 4, 8, 16, 100, 0.645)
 vox_res <- 0.01
 
 cores_to_use <- parallelly::availableCores(logical = FALSE) - 1
