@@ -20,7 +20,7 @@ execute:
 #| eval: false
 
 # install.packages("remotes")
-remotes::install_github("ataeub/coi", ref = "v2.4.0")
+# remotes::install_github("ataeub/coi", ref = "v2.4.0")
 ```
 
 # Libraries & local scripts
