@@ -981,9 +981,7 @@ ggsave(file = path(figure_path, "figure_s9.svg"),
 figure_s9
 ```
 
-# Extra Figure
-
-## COI vs. Height
+## Figure S10
 
 ```{r}
 #| echo: false
@@ -1018,4 +1016,66 @@ ggsave(file = path(figure_path, "extra_coi_vs_height.svg"),
     plot = extra_coi_vs_height,
     width=7,
     height=7)
+```
+
+## Figure S11
+
+```{r}
+
+beech_data_p <- here::here("data/results/beech_data_15m_automatic.csv")
+beech_data <- readr::read_csv(beech_data_p) |>
+  dplyr::mutate(scd = abs(sc_tree1 - sc_tree2)) |>
+  dplyr::filter(coi > 0)
+
+beech_glmm_cci_coi <- glmmTMB::glmmTMB(coi ~ cci +
+                                        (1|dataset),
+                                        family = glmmTMB::beta_family(),
+                                        data = beech_data,
+                                        REML = TRUE)
+summary(beech_glmm_cci_coi)
+
+beech_glmm_cci_scd <- glmmTMB::glmmTMB(cci ~ scd +
+                                        (1|dataset),
+                                        family = glmmTMB::beta_family(),
+                                        data = beech_data,
+                                        REML = TRUE)
+summary(beech_glmm_cci_scd)
+
+
+
+beech_lm_coi_scd <- lm(coi ~ scd, data = beech_data)
+summary(beech_lm_coi_scd)
+
+figure_s11a <- sjPlot::plot_model(
+    beech_glmm_cci_coi,
+    terms = "cci [0:1, by = 0.02]",
+    type = "pred",
+    show.data = TRUE,
+    title = "",
+    axis.title = c("CCI", "COI"),
+    dot.size = 4,
+    line.size = 1.5) +
+    coord_cartesian(xlim = c(0, 1), ylim = c(0, 0.5)) +
+    theme_classic() +
+    theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1)
+    )
+figure_s11b <- sjPlot::plot_model(
+    beech_glmm_cci_scd,
+    terms = "scd[0:0.6 by = 0.02]",
+    type = "pred",
+    show.data = TRUE,
+    title = "",
+    axis.title = c("SCD", "CCI"),
+    dot.size = 4,
+    line.size = 1.5) +
+    coord_cartesian(xlim = c(0, 0.6), ylim = c(0, 1)) +
+    theme_classic() +
+    theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1)
+    )
 ```
