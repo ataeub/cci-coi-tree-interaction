@@ -145,3 +145,69 @@ progressr::with_progress({
 output_p <- here::here("data/results/coi_sensitivity.csv")
 readr::write_csv(coi_sensitivity, output_p)
 ```
+
+# Beech dataset
+
+```{r}
+#| label: Beech data analysis
+#| eval: false
+
+source(here::here("src/beech_scripts.R"))
+
+max_pair_distance <- 15
+beech_data_p <- here::here("data/results/beech_data_15m_automatic.csv")
+
+# # Converting raw ascii files to uniform format
+# # Needs only to be run once
+# .beech_ascii_to_laz(
+#   input_dir = here::here("data/raw/beech_clouds_raw"),
+#   output_dir = here::here("data/processed/beech_data"),
+# )
+
+beech_pairs <- beech_auto_pair_manifest(
+  input_dir = here::here("data/processed/beech_data"),
+  max_pair_dist = max_pair_distance,
+  manifest_type = "edges",
+  plot = FALSE
+)
+# readr::write_csv(
+# beech_pairs,
+# here::here("data/processed/beech_pairs_raw_15m_automatic.csv")
+# )
+
+beech_parameters <- list(
+  vox_res = 0.01,
+  coi_d_max = NULL, # Will be dynamically added in loop as half the trunk distance
+  cci_strata_size = 0.3,
+  cci_strata_hull_type = "concave",
+  boxdim_threshold = 0.1,
+  filter_dist = 0.3,
+  sc_round = 4
+)
+
+cores_to_use <- parallelly::availableCores(logical = FALSE) - 1
+future::plan("multisession", workers = cores_to_use)
+progressr::handlers("cli")
+options(progressr.show_after = 0)
+
+progressr::with_progress({
+  p <- progressr::progressor(steps = nrow(beech_pairs))
+
+  beech_data <- beech_pairs %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(
+      results = furrr::future_pmap(
+        list(path_1, path_2, trunk_dist),
+        ~ {
+          beech_parameters$coi_d_max <- ..3 / 2
+          print(beech_parameters$coi_d_max)
+          compute_tsp_structure(..1, ..2, beech_parameters, p)
+        },
+        .options = furrr::furrr_options(seed = TRUE)
+      )
+    ) %>%
+    tidyr::unnest_wider(results)
+})
+
+readr::write_csv(beech_data, beech_data_p)
+```
