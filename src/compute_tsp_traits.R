@@ -140,10 +140,22 @@ calculate_tsp_traits <- function(tree_level_data) {
   #   dplyr::select(tsp, species, sla:p)
   # mean_ln_trait_table <- make_mean_ln_traits(traits_raw, community_table)
   # fdisp <- calculate_fdisp(mean_ln_trait_table)
+  tsp_mean_traits <- calculate_tsp_mean_traits(tree_level_data)
   compositions <- calculate_compositions(tree_level_data)
   traits <- tsp_dist |>
     # dplyr::left_join(fdisp, by = "tsp") |>
+    dplyr::left_join(tsp_mean_traits, by = "tsp") |>
     dplyr::left_join(compositions, by = "tsp") |>
     dplyr::distinct()
   traits
+}
+
+calculate_tsp_mean_traits <- function(tree_level_data) {
+  tree_level_data |>
+    dplyr::group_by(tsp) |>
+    dplyr::summarize(
+      tsp_sla  = mean(sla, na.rm = TRUE),
+      tsp_ldmc = mean(ldmc, na.rm = TRUE),
+      tsp_cn   = mean(cn, na.rm = TRUE)
+    )
 }
