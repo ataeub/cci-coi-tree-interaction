@@ -1082,6 +1082,8 @@ ggsave(
 
 ## Figure S11
 
+### Models
+
 ```{r}
 
 beech_data_p <- here::here("data/results/beech_data_15m_automatic.csv")
@@ -1097,6 +1099,7 @@ beech_glmm_cci_coi <- glmmTMB::glmmTMB(
   REML = TRUE
 )
 summary(beech_glmm_cci_coi)
+performance::r2(beech_glmm_cci_coi)
 
 beech_glmm_cci_scd <- glmmTMB::glmmTMB(
   cci ~ scd +
@@ -1105,6 +1108,97 @@ beech_glmm_cci_scd <- glmmTMB::glmmTMB(
   data = beech_data,
   REML = TRUE
 )
+summary(beech_glmm_cci_scd)
+performance::r2(beech_glmm_cci_scd)
+
+beech_glmm_coi_scd <- glmmTMB::glmmTMB(
+  coi ~ scd +
+    (1 | dataset),
+  family = glmmTMB::beta_family(),
+  data = beech_data,
+  REML = TRUE
+)
+summary(beech_glmm_coi_scd)
+performance::r2(beech_glmm_coi_scd)
+```
+
+```{r}
+# performance::check_model(beech_glmm_cci_coi)
+# performance::check_model(beech_glmm_cci_scd)
+# performance::check_model(beech_glmm_coi_scd)
+
+
+figure_s11a <- sjPlot::plot_model(
+  beech_glmm_cci_coi,
+  terms = "cci [0:1, by = 0.02]",
+  type = "pred",
+  show.data = TRUE,
+  title = "A",
+  axis.title = c("CCI", "COI"),
+  dot.size = 4,
+  line.size = 1.5
+) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 0.5)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+
+figure_s11b <- sjPlot::plot_model(
+  beech_glmm_cci_scd,
+  terms = "scd[0:0.6 by = 0.02]",
+  type = "pred",
+  show.data = TRUE,
+  title = "B",
+  axis.title = c("SCD", "CCI"),
+  dot.size = 4,
+  line.size = 1.5
+) +
+  coord_cartesian(xlim = c(0, 0.6), ylim = c(0, 1)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+
+figure_s11c <- sjPlot::plot_model(
+  beech_glmm_coi_scd,
+  terms = "scd [0:0.6 by = 0.02]",
+  type = "pred",
+  show.data = TRUE,
+  title = "C",
+  axis.title = c("SCD", "COI"),
+  dot.size = 4,
+  line.size = 1.5
+) +
+  coord_cartesian(xlim = c(0, 0.6), ylim = c(0, 0.5)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+
+figure_s11 <- wrap_plots(figure_s11a, figure_s11b, figure_s11c, nrow = 2)
+
+ggsave(
+  file = path(figure_path, "figure_s11.svg"),
+  plot = figure_s11,
+  width = 14,
+  height = 14
+)
+```
+
+
+summary(beech_glmm_cci_coi)
+
+
 summary(beech_glmm_cci_scd)
 
 
@@ -1147,3 +1241,39 @@ figure_s11b <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1)
   )
 ```
+
+
+
+tsp_data <- tsp_data |> dplyr::select(tsp, tsp_sla, tsp_ldmc, tsp_cn)
+
+full_data2 <- dplyr::left_join(full_data, tsp_data, by = "tsp") |>
+  dplyr::mutate(
+    tsp_sla_s = scale(tsp_sla),
+    tsp_ldmc_s = scale(tsp_ldmc),
+    tsp_cn_s = scale(tsp_cn),
+    scd = abs(sc_tree1 - sc_tree2)
+  )
+readr::write_csv(full_data2, "full_data.csv")
+
+
+plot(coi ~ tsp_sla, data = full_data2)
+plot(coi ~ tsp_cn, data = full_data2)
+plot(coi ~ tsp_ldmc, data = full_data2)
+
+plot(cci ~ tsp_sla, data = full_data2)
+plot(cci ~ tsp_cn, data = full_data2)
+plot(cci ~ tsp_ldmc, data = full_data2)
+
+plot(scd ~ tsp_sla, data = full_data2)
+plot(scd ~ tsp_cn, data = full_data2)
+plot(scd ~ tsp_ldmc, data = full_data2)
+
+glmm_coi_cci <- glmmTMB::glmmTMB(
+  cci ~ tsp_sla_s + tsp_ldmc_s + tsp_cn_s +
+    (1 | tsp_comp),
+  family = glmmTMB::beta_family(),
+  data = full_data2,
+  REML = TRUE
+)
+performance::check_model(glmm_coi_cci)
+summary(glmm_coi_cci)
