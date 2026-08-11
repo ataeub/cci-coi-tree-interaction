@@ -660,7 +660,8 @@ ggsave(
 figure_s6
 ```
 
-## Figure S7
+## Figure S7 old
+
 ### Models
 ```{r}
 
@@ -842,11 +843,11 @@ coi_scd_sep <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1)
   )
 
-figure_s7 <- wrap_plots(cci_ltd_sep, cci_scd_sep, coi_ltd_sep, coi_scd_sep, nrow = 2)
+figure_s7_old <- wrap_plots(cci_ltd_sep, cci_scd_sep, coi_ltd_sep, coi_scd_sep, nrow = 2)
 
 ggsave(
-  file = path(figure_path, "figure_s7.svg"),
-  plot = figure_s7,
+  file = path(figure_path, "figure_s7_old.svg"),
+  plot = figure_s7_old,
   width = 15,
   height = 14
 )
@@ -859,6 +860,230 @@ ggsave(
 ### Figure
 ```{r}
 #| fig-width: 14
+#| fig-height: 14
+
+figure_s7_old
+```
+
+## Figure S7
+
+### Models
+
+```{r}
+sep_trait_data <- full_data |>
+  dplyr::mutate(
+    tsp_sla_s = scale(tsp_sla),
+    tsp_ldmc_s = scale(tsp_ldmc),
+    tsp_cn_s = scale(tsp_cn)
+  )
+
+glmm_cci_sep_traits <- glmmTMB::glmmTMB(
+  cci ~ tsp_sla_s + tsp_ldmc_s + tsp_cn_s +
+    (1 | tsp_comp),
+  family = glmmTMB::beta_family(),
+  data = sep_trait_data,
+  REML = TRUE
+)
+performance::check_model(glmm_cci_sep_traits)
+summary(glmm_cci_sep_traits)
+performance::r2(glmm_cci_sep_traits)
+
+glmm_coi_sep_traits <- glmmTMB::glmmTMB(
+  coi ~ tsp_sla_s + tsp_ldmc_s + tsp_cn_s +
+    (1 | tsp_comp),
+  family = glmmTMB::beta_family(),
+  data = sep_trait_data,
+  REML = TRUE
+)
+performance::check_model(glmm_coi_sep_traits)
+summary(glmm_coi_sep_traits)
+performance::r2(glmm_coi_sep_traits)
+```
+
+### Figures
+
+```{r}
+#| echo: false
+#| output: false
+
+center_sla   <- attr(scale(sep_trait_data$tsp_sla),  "scaled:center")
+scale_sla    <- attr(scale(sep_trait_data$tsp_sla),  "scaled:scale")
+center_ldmc  <- attr(scale(sep_trait_data$tsp_ldmc), "scaled:center")
+scale_ldmc   <- attr(scale(sep_trait_data$tsp_ldmc), "scaled:scale")
+center_cn    <- attr(scale(sep_trait_data$tsp_cn),   "scaled:center")
+scale_cn     <- attr(scale(sep_trait_data$tsp_cn),   "scaled:scale")
+
+sla_limits  <- scale_by(c(40, 240), center_sla,  scale_sla)
+ldmc_limits <- scale_by(c(320, 560), center_ldmc, scale_ldmc)
+cn_limits   <- scale_by(c(20,  44), center_cn,   scale_cn)
+
+# Adjust tick positions on the original (unscaled) trait axes here
+sla_breaks  <- scale_by(seq(40, 240, 20), center_sla,  scale_sla)
+ldmc_breaks <- scale_by(seq(320, 560, 40), center_ldmc, scale_ldmc)
+cn_breaks   <- scale_by(seq(20,  44, 2), center_cn,   scale_cn)
+
+cci_sla_plot <- sjPlot::plot_model(
+  glmm_cci_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_sla_s [", sla_limits[1] - 0.1, ":", sla_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "A",
+  axis.title = c("SLA", "CCI")
+) +
+  scale_x_continuous(breaks = sla_breaks, labels = function(x) round(descale_by(x, center_sla, scale_sla), 1)) +
+  coord_cartesian(xlim = sla_limits, ylim = c(0, 1)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = axis_text_size),
+    axis.text.x = element_blank(), axis.title.x = element_blank(),
+    axis.title.y = element_text(size = axis_text_size),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+for (i in seq_along(cci_sla_plot$layers)) {
+  if ("GeomLine" %in% class(cci_sla_plot$layers[[i]]$geom)) {
+    cci_sla_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+cci_ldmc_plot <- sjPlot::plot_model(
+  glmm_cci_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_ldmc_s [", ldmc_limits[1] - 0.1, ":", ldmc_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "B",
+  axis.title = c("LDMC", "")
+) +
+  scale_x_continuous(breaks = ldmc_breaks, labels = function(x) round(descale_by(x, center_ldmc, scale_ldmc), 1)) +
+  coord_cartesian(xlim = ldmc_limits, ylim = c(0, 1)) +
+  theme_classic() +
+  theme(
+    axis.text = element_blank(),
+    axis.title.x = element_blank(), axis.title.y = element_blank(),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+for (i in seq_along(cci_ldmc_plot$layers)) {
+  if ("GeomLine" %in% class(cci_ldmc_plot$layers[[i]]$geom)) {
+    cci_ldmc_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+cci_cn_plot <- sjPlot::plot_model(
+  glmm_cci_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_cn_s [", cn_limits[1] - 0.1, ":", cn_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "C",
+  axis.title = c("C:N ratio", "")
+) +
+  scale_x_continuous(breaks = cn_breaks, labels = function(x) round(descale_by(x, center_cn, scale_cn), 1)) +
+  coord_cartesian(xlim = cn_limits, ylim = c(0, 1)) +
+  theme_classic() +
+  theme(
+    axis.text = element_blank(),
+    axis.title.x = element_blank(), axis.title.y = element_blank(),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+for (i in seq_along(cci_cn_plot$layers)) {
+  if ("GeomLine" %in% class(cci_cn_plot$layers[[i]]$geom)) {
+    cci_cn_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+coi_sla_plot <- sjPlot::plot_model(
+  glmm_coi_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_sla_s [", sla_limits[1] - 0.1, ":", sla_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "D",
+  axis.title = c("SLA", "COI")
+) +
+  scale_x_continuous(breaks = sla_breaks, labels = function(x) round(descale_by(x, center_sla, scale_sla), 1)) +
+  scale_y_continuous(breaks = coi_breaks) +
+  coord_cartesian(xlim = sla_limits, ylim = coi_limits) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = axis_text_size),
+    axis.title.x = element_text(size = axis_text_size, margin = margin(20, 0, 0, 0)),
+    axis.title.y = element_text(size = axis_text_size),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+
+coi_ldmc_plot <- sjPlot::plot_model(
+  glmm_coi_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_ldmc_s [", ldmc_limits[1] - 0.1, ":", ldmc_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "E",
+  axis.title = c("LDMC", "")
+) +
+  scale_x_continuous(breaks = ldmc_breaks, labels = function(x) round(descale_by(x, center_ldmc, scale_ldmc), 1)) +
+  scale_y_continuous(breaks = coi_breaks) +
+  coord_cartesian(xlim = ldmc_limits, ylim = coi_limits) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = axis_text_size),
+    axis.title.x = element_text(size = axis_text_size, margin = margin(20, 0, 0, 0)),
+    axis.title.y = element_blank(), axis.text.y = element_blank(),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+for (i in seq_along(coi_ldmc_plot$layers)) {
+  if ("GeomLine" %in% class(coi_ldmc_plot$layers[[i]]$geom)) {
+    coi_ldmc_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+coi_cn_plot <- sjPlot::plot_model(
+  glmm_coi_sep_traits,
+  type = "pred",
+  terms = paste0("tsp_cn_s [", cn_limits[1] - 0.1, ":", cn_limits[2] + 0.1, ", by = 0.01]"),
+  show.data = TRUE, dot.size = 4, line.size = 1.5,
+  title = "F",
+  axis.title = c("C:N ratio", "")
+) +
+  scale_x_continuous(breaks = cn_breaks, labels = function(x) round(descale_by(x, center_cn, scale_cn), 1)) +
+  scale_y_continuous(breaks = coi_breaks) +
+  coord_cartesian(xlim = cn_limits, ylim = coi_limits) +
+  theme_classic() +
+  theme(
+    axis.text.x = element_text(size = axis_text_size),
+    axis.title.x = element_text(size = axis_text_size, margin = margin(20, 0, 0, 0)),
+    axis.title.y = element_blank(), axis.text.y = element_blank(),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    plot.title = element_text(size = 30, face = "bold")
+  )
+for (i in seq_along(coi_cn_plot$layers)) {
+  if ("GeomLine" %in% class(coi_cn_plot$layers[[i]]$geom)) {
+    coi_cn_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
+
+figure_s7 <- wrap_plots(
+  cci_sla_plot, cci_ldmc_plot, cci_cn_plot,
+  coi_sla_plot, coi_ldmc_plot, coi_cn_plot,
+  nrow = 2
+)
+
+ggsave(
+  file = path(figure_path, "figure_s7.svg"),
+  plot = figure_s7,
+  width = 21,
+  height = 14
+)
+```
+
+```{r}
+#| fig-width: 21
 #| fig-height: 14
 
 figure_s7
