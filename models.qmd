@@ -26,15 +26,12 @@ library(fs)
 library(readr)
 library(forcats)
 library(here)
-library(flextable)
 
 # Stats
-library(mgcv)
 library(glmmTMB)
 library(lmerTest)
 library(MuMIn)
 library(performance)
-library(gratia)
 
 # Plotting
 library(sjPlot)
