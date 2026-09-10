@@ -869,9 +869,9 @@ figure_s7_old
 ```{r}
 sep_trait_data <- full_data |>
   dplyr::mutate(
-    tsp_sla_s = scale(tsp_sla),
-    tsp_ldmc_s = scale(tsp_ldmc),
-    tsp_cn_s = scale(tsp_cn)
+    tsp_sla_s = scale(tsp_sla_diff),
+    tsp_ldmc_s = scale(tsp_ldmc_diff),
+    tsp_cn_s = scale(tsp_cn_diff)
   )
 
 glmm_cci_sep_traits <- glmmTMB::glmmTMB(
@@ -903,21 +903,21 @@ performance::r2(glmm_coi_sep_traits)
 #| echo: false
 #| output: false
 
-center_sla   <- attr(scale(sep_trait_data$tsp_sla),  "scaled:center")
-scale_sla    <- attr(scale(sep_trait_data$tsp_sla),  "scaled:scale")
-center_ldmc  <- attr(scale(sep_trait_data$tsp_ldmc), "scaled:center")
-scale_ldmc   <- attr(scale(sep_trait_data$tsp_ldmc), "scaled:scale")
-center_cn    <- attr(scale(sep_trait_data$tsp_cn),   "scaled:center")
-scale_cn     <- attr(scale(sep_trait_data$tsp_cn),   "scaled:scale")
+center_sla   <- attr(scale(sep_trait_data$tsp_sla_diff),  "scaled:center")
+scale_sla    <- attr(scale(sep_trait_data$tsp_sla_diff),  "scaled:scale")
+center_ldmc  <- attr(scale(sep_trait_data$tsp_ldmc_diff), "scaled:center")
+scale_ldmc   <- attr(scale(sep_trait_data$tsp_ldmc_diff), "scaled:scale")
+center_cn    <- attr(scale(sep_trait_data$tsp_cn_diff),   "scaled:center")
+scale_cn     <- attr(scale(sep_trait_data$tsp_cn_diff),   "scaled:scale")
 
-sla_limits  <- scale_by(c(40, 240), center_sla,  scale_sla)
-ldmc_limits <- scale_by(c(320, 560), center_ldmc, scale_ldmc)
-cn_limits   <- scale_by(c(20,  44), center_cn,   scale_cn)
+sla_limits  <- scale_by(c(0, 140), center_sla,  scale_sla)
+ldmc_limits <- scale_by(c(0, 160), center_ldmc, scale_ldmc)
+cn_limits   <- scale_by(c(0,  18), center_cn,   scale_cn)
 
 # Adjust tick positions on the original (unscaled) trait axes here
-sla_breaks  <- scale_by(seq(40, 240, 20), center_sla,  scale_sla)
-ldmc_breaks <- scale_by(seq(320, 560, 40), center_ldmc, scale_ldmc)
-cn_breaks   <- scale_by(seq(20,  44, 2), center_cn,   scale_cn)
+sla_breaks  <- scale_by(seq(0, 140, 20), center_sla,  scale_sla)
+ldmc_breaks <- scale_by(seq(0, 160, 20), center_ldmc, scale_ldmc)
+cn_breaks   <- scale_by(seq(0, 18, 2), center_cn,   scale_cn)
 
 cci_sla_plot <- sjPlot::plot_model(
   glmm_cci_sep_traits,
@@ -938,11 +938,6 @@ cci_sla_plot <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1),
     plot.title = element_text(size = 30, face = "bold")
   )
-for (i in seq_along(cci_sla_plot$layers)) {
-  if ("GeomLine" %in% class(cci_sla_plot$layers[[i]]$geom)) {
-    cci_sla_plot$layers[[i]]$aes_params$linetype <- "dashed"
-  }
-}
 
 cci_ldmc_plot <- sjPlot::plot_model(
   glmm_cci_sep_traits,
@@ -962,11 +957,6 @@ cci_ldmc_plot <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1),
     plot.title = element_text(size = 30, face = "bold")
   )
-for (i in seq_along(cci_ldmc_plot$layers)) {
-  if ("GeomLine" %in% class(cci_ldmc_plot$layers[[i]]$geom)) {
-    cci_ldmc_plot$layers[[i]]$aes_params$linetype <- "dashed"
-  }
-}
 
 cci_cn_plot <- sjPlot::plot_model(
   glmm_cci_sep_traits,
@@ -1012,6 +1002,11 @@ coi_sla_plot <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1),
     plot.title = element_text(size = 30, face = "bold")
   )
+for (i in seq_along(coi_sla_plot$layers)) {
+  if ("GeomLine" %in% class(coi_sla_plot$layers[[i]]$geom)) {
+    coi_sla_plot$layers[[i]]$aes_params$linetype <- "dashed"
+  }
+}
 
 coi_ldmc_plot <- sjPlot::plot_model(
   glmm_coi_sep_traits,
@@ -1059,11 +1054,6 @@ coi_cn_plot <- sjPlot::plot_model(
     panel.border = element_rect(linewidth = 1),
     plot.title = element_text(size = 30, face = "bold")
   )
-for (i in seq_along(coi_cn_plot$layers)) {
-  if ("GeomLine" %in% class(coi_cn_plot$layers[[i]]$geom)) {
-    coi_cn_plot$layers[[i]]$aes_params$linetype <- "dashed"
-  }
-}
 
 figure_s7 <- wrap_plots(
   cci_sla_plot, cci_ldmc_plot, cci_cn_plot,
