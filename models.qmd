@@ -1458,6 +1458,75 @@ ggsave(
   height = 14
 )
 ```
+
+## Figure S13
+
+```{r}
+
+full_data <- full_data |>
+  dplyr::mutate(
+    grp = paste0(tsp_div, "_", tsp_habits)
+  )
+
+grp_label_map <- c(
+  "mono_deciduous" = "Mono - Deciduous",
+  "mono_evergreen" = "Mono - Evergreen",
+  "mix_mixed habit" = "Mixed - Mixed Habit",
+  "mix_deciduous" = "Mixed - Deciduous",
+  "mix_evergreen" = "Mixed - Evergreen"
+)
+
+full_data <- full_data |>
+  dplyr::mutate(
+    grp_label = dplyr::recode(grp, !!!grp_label_map, .default = grp)
+  )
+
+facet_levels <- unique(full_data$grp_label)
+
+facet_data <- dplyr::bind_rows(
+  lapply(facet_levels, function(g) {
+    full_data |>
+      dplyr::mutate(
+        facet_panel = g,
+        is_focal_group = grp_label == g
+      )
+  })
+)
+
+figure_s13 <- ggplot(facet_data, aes(x = cci, y = coi)) +
+  geom_point(
+    data = dplyr::filter(facet_data, !is_focal_group),
+    colour = "grey70",
+    size = 5,
+    alpha = 0.2
+  ) +
+  geom_point(
+    data = dplyr::filter(facet_data, is_focal_group),
+    colour = "red3",
+    size = 5,
+    alpha = 0.45
+  ) +
+  xlab("CCI") +
+  ylab("COI") +
+  facet_wrap(~ facet_panel) +
+  coord_cartesian(xlim = c(0, 1), ylim = c(0, 1)) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = axis_text_size),
+    axis.title = element_text(size = axis_text_size),
+    axis.line = element_line(linetype = "blank"),
+    panel.border = element_rect(linewidth = 1),
+    strip.text = element_text(size = axis_text_size)
+  )
+
+figure_s13
+
+ggsave(
+  file = path(figure_path, "figure_s13.svg"),
+  plot = figure_s13,
+  width = 14,
+  height = 9
+)
 ```
 
 
