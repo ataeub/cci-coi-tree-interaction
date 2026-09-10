@@ -1257,7 +1257,6 @@ figure_s9
 ```{r}
 #| echo: false
 #| output: false
-#| eval: false
 
 full_data_2d <- full_data %>%
   dplyr::filter(ovlp_2d > 0)
@@ -1290,6 +1289,10 @@ ggsave(
   width = 7,
   height = 7
 )
+```
+
+```{r}
+figure_s10
 ```
 
 ## Figure S11
