@@ -1294,14 +1294,40 @@ ggsave(
 
 ## Figure S11
 
-### Models
-
 ```{r}
-
 beech_data_p <- here::here("data/results/beech_data_15m_automatic.csv")
 beech_data <- readr::read_csv(beech_data_p) |>
   dplyr::mutate(scd = abs(sc_tree1 - sc_tree2)) |>
   dplyr::filter(coi > 0)
+
+figure_s11 <- ggplot(beech_data, aes(x = d_max)) +
+  geom_histogram(fill = "grey70", color = "white") +
+  scale_x_continuous(breaks = seq(0, 8, 1)) +
+  coord_cartesian(xlim = c(0, 8), ylim = c(0, 40)) +
+  xlab(expression(d[max])) +
+  ylab("Count") +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 20),
+    axis.title = element_text(size = 20),
+    panel.border = element_rect(linewidth = 1)
+  )
+
+ggsave(
+  file = path(figure_path, "figure_s11.svg"),
+  plot = figure_s11,
+  width = 7,
+  height = 7
+)
+
+figure_s11
+```
+
+## Figure S12
+
+### Models
+
+```{r}
 
 beech_glmm_cci_coi <- glmmTMB::glmmTMB(
   coi ~ cci +
