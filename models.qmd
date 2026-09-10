@@ -46,6 +46,8 @@ options(readr.show_col_types = FALSE)
 
 data_path <- here("data/results/tsp_data.csv")
 figure_path <- here("data/results/figures")
+
+axis_text_size <- 20
 ```
 
 # Data read-in
@@ -284,8 +286,6 @@ performance::r2(glmm_coi_3)
 
 figure_s2 <- performance::check_model(glmm_cci_3)
 figure_s3 <- performance::check_model(glmm_coi_3)
-
-axis_text_size <- 20
 
 cci_ltd_plot <- sjPlot::plot_model(
   glmm_cci_3,
